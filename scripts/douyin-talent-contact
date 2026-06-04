@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ $# -gt 0 && "$1" != --* ]]; then
+  TASK_ID="$1"
+  shift
+  exec python3 "$SCRIPT_DIR/run_talent_task.py" --task-id "$TASK_ID" "$@"
+fi
+exec python3 "$SCRIPT_DIR/run_talent_task.py" "$@"

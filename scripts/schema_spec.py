@@ -1,0 +1,131 @@
+#!/usr/bin/env python3
+"""Shared table schema for Douyin Life talent contact automation."""
+
+from __future__ import annotations
+
+CONFIG_FIELDS = [
+    "任务ID",
+    "任务编号",
+    "启用",
+    "常驻城市",
+    "优势品类",
+    "直播类型",
+    "达人粉丝数",
+    "视频带货力",
+    "直播带货力",
+    "达人内容力",
+    "短视频报价最低",
+    "短视频报价最高",
+    "直播报价最低",
+    "直播报价最高",
+    "是否合作过",
+    "同行合作过",
+    "签约机构",
+    "有微信/电话",
+    "达人类型",
+    "每页数量",
+    "查询次数",
+    "执行结果",
+    "创建时间",
+]
+
+RESULT_FIELDS = [
+    "最近执行时间",
+    "达人昵称",
+    "抖音号",
+    "达人UID",
+    "达人城市",
+    "达人品类",
+    "粉丝数",
+    "视频带货力结果",
+    "直播带货力结果",
+    "内容力结果",
+    "信用分",
+    "30日核销率",
+    "稿均销售额",
+    "平均种草销售额",
+    "稿均播放量",
+    "稿均千次曝光GMV",
+    "稿均完播率",
+    "POI锚点点击率",
+    "场均销售额",
+    "场均观看人数",
+    "场均观看时长",
+    "场均评论数",
+    "微信号",
+    "联系方式来源",
+    "是否消耗额度",
+]
+
+TABLE_SCHEMAS = {
+    "配置表": [{"name": name, "type": "text"} for name in CONFIG_FIELDS],
+    "结果表": [
+        {"name": name, "type": "number", "property": {"formatter": "INT"}}
+        if name in {"信用分", "场均评论数"}
+        else {"name": name, "type": "text"}
+        for name in RESULT_FIELDS
+    ],
+    "达人主档表": [
+        {"name": "dedupe_key", "type": "text"},
+        {"name": "达人昵称", "type": "text"},
+        {"name": "抖音号", "type": "text"},
+        {"name": "达人UID", "type": "text"},
+        {"name": "达人城市", "type": "text"},
+        {"name": "达人品类", "type": "text"},
+        {"name": "微信号", "type": "text"},
+        {"name": "虚拟手机号", "type": "text"},
+        {"name": "首次获取时间", "type": "text"},
+        {"name": "最近更新时间", "type": "text"},
+        {"name": "来源配置hash", "type": "text"},
+    ],
+    "联系方式查看日志": [
+        {"name": "日期", "type": "text"},
+        {"name": "账号", "type": "text"},
+        {"name": "run_id", "type": "text"},
+        {"name": "config_hash", "type": "text"},
+        {"name": "dedupe_key", "type": "text"},
+        {"name": "达人昵称", "type": "text"},
+        {"name": "抖音号", "type": "text"},
+        {"name": "动作", "type": "text"},
+        {"name": "状态", "type": "text"},
+        {"name": "消耗额度", "type": "text"},
+        {"name": "查看前剩余额度", "type": "number", "property": {"formatter": "INT"}},
+        {"name": "查看后剩余额度", "type": "number", "property": {"formatter": "INT"}},
+        {"name": "原因", "type": "text"},
+        {"name": "微信号", "type": "text"},
+        {"name": "记录时间", "type": "text"},
+    ],
+    "每日30次额度审计": [
+        {"name": "日期", "type": "text"},
+        {"name": "账号", "type": "text"},
+        {"name": "run_id", "type": "text"},
+        {"name": "每日额度", "type": "number", "property": {"formatter": "INT"}},
+        {"name": "保留额度", "type": "number", "property": {"formatter": "INT"}},
+        {"name": "已消耗次数", "type": "number", "property": {"formatter": "INT"}},
+        {"name": "剩余次数", "type": "number", "property": {"formatter": "INT"}},
+        {"name": "可继续查看", "type": "text"},
+        {"name": "最近更新时间", "type": "text"},
+    ],
+    "任务执行游标表": [
+        {"name": "config_hash", "type": "text"},
+        {"name": "任务ID", "type": "text"},
+        {"name": "账号", "type": "text"},
+        {"name": "筛选摘要", "type": "text"},
+        {"name": "最近扫描页码", "type": "number", "property": {"formatter": "INT"}},
+        {"name": "最近成功页码", "type": "number", "property": {"formatter": "INT"}},
+        {"name": "已采集数量", "type": "number", "property": {"formatter": "INT"}},
+        {"name": "连续重复页数", "type": "number", "property": {"formatter": "INT"}},
+        {"name": "状态", "type": "text"},
+        {"name": "最近运行时间", "type": "text"},
+        {"name": "备注", "type": "text"},
+    ],
+}
+
+TABLE_KEYS = {
+    "配置表": "config_sheet",
+    "结果表": "result_sheet",
+    "达人主档表": "master_sheet",
+    "联系方式查看日志": "contact_log_sheet",
+    "每日30次额度审计": "quota_sheet",
+    "任务执行游标表": "cursor_sheet",
+}

@@ -1,0 +1,27 @@
+[
+  {
+    "nickname": "示例达人A",
+    "douyin_id": "demo_talent_001",
+    "uid": "",
+    "city": "示例城市",
+    "category": "地方菜/饮品",
+    "followers": "3.67 万；50% 为女性",
+    "video_power": "Lv5",
+    "live_power": "Lv0",
+    "content_power": "Lv4",
+    "credit_score": 100,
+    "verification_rate_30d": "39.67%",
+    "avg_sales_per_video": "1972；地方菜",
+    "avg_seed_sales": "429",
+    "avg_views_per_video": "1.35 万；示例城市前 3%",
+    "avg_gmv_per_k_impression": "150",
+    "avg_completion_rate": "6.35%",
+    "poi_click_rate": "6.03%；示例城市前 9%",
+    "avg_live_sales": "<100",
+    "avg_live_watchers": "0",
+    "avg_live_watch_time": "0 秒",
+    "avg_live_comments": 0,
+    "wechat": "demo_wechat_001",
+    "phone": "13800000000"
+  }
+]
