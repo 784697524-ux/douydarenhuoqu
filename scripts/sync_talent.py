@@ -200,6 +200,10 @@ def is_retryable_helper_failure(text: str) -> bool:
         "ServiceUnavailable",
         "temporary failure",
         "Too Many Requests",
+        "socket.timeout",
+        "timed out",
+        "read operation timed out",
+        "The read operation timed out",
     )
     return any(marker in text for marker in markers)
 

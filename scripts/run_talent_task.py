@@ -21,7 +21,7 @@ sys.path.insert(0, str(SCRIPT_DIR))
 from runtime_config import DEFAULT_CONFIG_PATH, DEFAULT_DOUYIN_URL, load_config, require_keys  # noqa: E402
 
 SYNC = SCRIPT_DIR / "sync_talent.py"
-BROWSER = SCRIPT_DIR / "douyin_browser_runner.py"
+BROWSER = SCRIPT_DIR / "douyin_browser_runner_selenium.py"
 LAUNCH_CHROME = SCRIPT_DIR / "launch_debug_chrome.py"
 FEISHU_ADAPTER = SCRIPT_DIR / "feishu_notable_adapter.py"
 

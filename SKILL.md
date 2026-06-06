@@ -66,8 +66,9 @@ douyin-talent-contact 001 --wait-ready 60
 ## Scripts
 
 - `scripts/init_tables.py`: creates or repairs the 6-table schema and can write local config.
-- `scripts/run_talent_task.py`: config-driven runner for browser filtering, contact lookup, DingTalk writeback, cursor/status writeback.
-- `scripts/douyin_browser_runner.py`: compact Playwright/CDP browser collector.
+- `scripts/run_talent_task.py`: config-driven runner for browser filtering, contact lookup, DingTalk/Feishu writeback, cursor/status writeback.
+- `scripts/douyin_browser_runner_selenium.py`: Selenium/CDP browser collector used by the current runner; it handles Chrome 148+ CDP behavior and waits for filtered rows before writing.
+- `scripts/douyin_browser_runner.py`: legacy Playwright/CDP browser collector kept for reference.
 - `scripts/sync_talent.py`: table prepare/commit/verify logic used by both backends.
 - `scripts/feishu_notable_adapter.py`: maps Feishu Base record commands to the notable-style interface expected by `sync_talent.py`.
 - `scripts/launch_debug_chrome.py`: starts a dedicated Chrome profile on CDP port `9222`.
