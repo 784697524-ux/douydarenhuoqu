@@ -1,4 +1,18 @@
 {
+  "rewrites": [
+    {
+      "source": "/api/jobs",
+      "destination": "/api/relay?route=jobs"
+    },
+    {
+      "source": "/api/next",
+      "destination": "/api/relay?route=next"
+    },
+    {
+      "source": "/api/complete",
+      "destination": "/api/relay?route=complete"
+    }
+  ],
   "functions": {
     "api/*.js": {
       "maxDuration": 10
