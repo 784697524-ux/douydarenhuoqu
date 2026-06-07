@@ -71,6 +71,14 @@ export DOUYIN_RELAY_WORKER_TOKEN="<WORKER_TOKEN>"
 python3 scripts/vercel_relay_worker.py
 ```
 
+For a durable relay queue, create a private Vercel Blob store in `vercel-relay`:
+
+```bash
+vercel blob create-store douyin-talent-relay-queue --access private --yes --environment production --environment preview --environment development
+```
+
+The store priority is `Redis/KV -> Vercel Blob -> memory`. Memory mode is only for smoke tests.
+
 ## Guardrails
 
 - Never open `查看联系方式` before `prepare` returns `skip_keys`, cached contacts, and available quota.

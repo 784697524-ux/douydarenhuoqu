@@ -229,7 +229,20 @@ export DOUYIN_RELAY_WORKER_TOKEN="<WORKER_TOKEN>"
 python3 scripts/vercel_relay_worker.py
 ```
 
-长期使用需要给 Vercel Relay 连接 Vercel KV 或 Upstash Redis，否则没有持久队列，Vercel 冷启动时可能丢任务。
+长期使用需要持久队列。当前 Relay 支持的优先级是：
+
+```text
+Redis/KV -> Vercel Blob -> memory
+```
+
+默认推荐用 Vercel Blob：
+
+```bash
+cd vercel-relay
+vercel blob create-store douyin-talent-relay-queue --access private --yes --environment production --environment preview --environment development
+```
+
+如果没有 Redis/KV/Blob，Relay 会退回内存队列，只适合烟测，不适合长期使用。
 
 ## 去重和额度规则
 

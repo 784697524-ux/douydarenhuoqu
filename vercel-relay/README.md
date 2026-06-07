@@ -19,7 +19,19 @@ For long-term durable queue storage, connect Vercel KV or Upstash Redis and set 
 - `KV_REST_API_URL` + `KV_REST_API_TOKEN`
 - `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`
 
-Without Redis/KV, the relay falls back to in-memory storage. That is only for smoke tests and is not durable.
+The relay also supports Vercel Blob with `BLOB_READ_WRITE_TOKEN`. This is the default durable store created by:
+
+```bash
+vercel blob create-store douyin-talent-relay-queue --access private --yes --environment production --environment preview --environment development
+```
+
+Store priority is:
+
+```text
+Redis/KV -> Vercel Blob -> memory
+```
+
+Without Redis/KV/Blob, the relay falls back to in-memory storage. That is only for smoke tests and is not durable.
 
 ## DingTalk HTTP body
 

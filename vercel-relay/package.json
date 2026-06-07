@@ -7,7 +7,7 @@
     "test": "node tests/local-store-smoke.mjs"
   },
   "dependencies": {
-    "@upstash/redis": "^1.35.3"
-  },
-  "devDependencies": {}
+    "@upstash/redis": "^1.35.3",
+    "@vercel/blob": "^2.4.0"
+  }
 }

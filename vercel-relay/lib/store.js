@@ -1,3 +1,4 @@
+import { get as blobGet, put as blobPut } from "@vercel/blob";
 import { Redis } from "@upstash/redis";
 import crypto from "node:crypto";
 
@@ -16,6 +17,10 @@ function redis() {
   return config ? new Redis(config) : null;
 }
 
+function blobEnabled() {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN || (process.env.VERCEL_OIDC_TOKEN && process.env.BLOB_STORE_ID));
+}
+
 function prefix() {
   return process.env.RELAY_QUEUE_PREFIX || "douyin-talent-relay";
 }
@@ -26,6 +31,10 @@ function queueKey() {
 
 function jobKey(id) {
   return `${prefix()}:job:${id}`;
+}
+
+function blobStatePath() {
+  return `${prefix()}/state.json`;
 }
 
 function nowIso() {
@@ -82,8 +91,35 @@ function fromRedisRecord(record) {
   };
 }
 
+function emptyBlobState() {
+  return { queue: [], jobs: {} };
+}
+
+async function readBlobState() {
+  const result = await blobGet(blobStatePath(), { access: "private", useCache: false });
+  if (!result) return emptyBlobState();
+  const text = await new Response(result.stream).text();
+  if (!text.trim()) return emptyBlobState();
+  const state = JSON.parse(text);
+  return {
+    queue: Array.isArray(state.queue) ? state.queue : [],
+    jobs: state.jobs && typeof state.jobs === "object" ? state.jobs : {}
+  };
+}
+
+async function writeBlobState(state) {
+  await blobPut(blobStatePath(), JSON.stringify(state), {
+    access: "private",
+    allowOverwrite: true,
+    contentType: "application/json",
+    cacheControlMaxAge: 60
+  });
+}
+
 export function storeMode() {
-  return redisConfig() ? "redis" : "memory";
+  if (redisConfig()) return "redis";
+  if (blobEnabled()) return "blob";
+  return "memory";
 }
 
 export async function enqueueJob(input) {
@@ -94,6 +130,13 @@ export async function enqueueJob(input) {
     await client.lpush(queueKey(), job.id);
     return job;
   }
+  if (blobEnabled()) {
+    const state = await readBlobState();
+    state.jobs[job.id] = job;
+    state.queue.unshift(job.id);
+    await writeBlobState(state);
+    return job;
+  }
   memory.jobs.set(job.id, job);
   memory.queue.unshift(job.id);
   return job;
@@ -102,6 +145,10 @@ export async function enqueueJob(input) {
 export async function getJob(id) {
   const client = redis();
   if (client) return fromRedisRecord(await client.hgetall(jobKey(id)));
+  if (blobEnabled()) {
+    const state = await readBlobState();
+    return state.jobs[id] || null;
+  }
   return memory.jobs.get(id) || null;
 }
 
@@ -114,6 +161,17 @@ export async function takeNextJob() {
     if (!existing) return null;
     const running = { ...existing, status: "running", started_at: nowIso(), updated_at: nowIso() };
     await client.hset(jobKey(id), toRedisRecord(running));
+    return running;
+  }
+  if (blobEnabled()) {
+    const state = await readBlobState();
+    const id = state.queue.pop();
+    if (!id) return null;
+    const existing = state.jobs[id];
+    if (!existing) return null;
+    const running = { ...existing, status: "running", started_at: nowIso(), updated_at: nowIso() };
+    state.jobs[id] = running;
+    await writeBlobState(state);
     return running;
   }
 
@@ -143,6 +201,11 @@ export async function completeJob(input) {
   };
   const client = redis();
   if (client) await client.hset(jobKey(id), toRedisRecord(completed));
+  else if (blobEnabled()) {
+    const state = await readBlobState();
+    state.jobs[id] = completed;
+    await writeBlobState(state);
+  }
   else memory.jobs.set(id, completed);
   return completed;
 }
