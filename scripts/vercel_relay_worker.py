@@ -32,6 +32,31 @@ def request_json(method: str, url: str, token: str, payload: dict[str, Any] | No
         return json.loads(resp.read().decode("utf-8"))
 
 
+def apply_proxy(proxy: str) -> None:
+    if not proxy:
+        return
+    os.environ.setdefault("HTTP_PROXY", proxy)
+    os.environ.setdefault("HTTPS_PROXY", proxy)
+
+
+def macos_https_proxy() -> str:
+    try:
+        output = subprocess.check_output(["scutil", "--proxy"], text=True, timeout=3)
+    except Exception:
+        return ""
+    values: dict[str, str] = {}
+    for line in output.splitlines():
+        if ":" not in line:
+            continue
+        key, value = line.split(":", 1)
+        values[key.strip()] = value.strip()
+    if values.get("HTTPSEnable") != "1":
+        return ""
+    host = values.get("HTTPSProxy", "")
+    port = values.get("HTTPSPort", "")
+    return f"http://{host}:{port}" if host and port else ""
+
+
 def task_command(payload: dict[str, Any]) -> list[str]:
     task_id = str(payload.get("task_id") or payload.get("任务编号") or payload.get("任务ID") or "").strip()
     if not task_id:
@@ -87,6 +112,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--worker-token", default=os.environ.get("DOUYIN_RELAY_WORKER_TOKEN", ""))
     parser.add_argument("--interval", type=float, default=float(os.environ.get("DOUYIN_RELAY_POLL_INTERVAL", "10")))
     parser.add_argument("--timeout", type=int, default=int(os.environ.get("DOUYIN_RELAY_TASK_TIMEOUT", "900")))
+    parser.add_argument("--proxy", default=os.environ.get("DOUYIN_RELAY_PROXY", ""))
+    parser.add_argument("--no-system-proxy", action="store_true")
     parser.add_argument("--once", action="store_true")
     return parser
 
@@ -99,6 +126,10 @@ def main(argv: list[str] | None = None) -> int:
     if not args.worker_token:
         print("error: missing --worker-token or DOUYIN_RELAY_WORKER_TOKEN", file=sys.stderr)
         return 2
+    if args.proxy:
+        apply_proxy(args.proxy)
+    elif not args.no_system_proxy:
+        apply_proxy(macos_https_proxy())
 
     while True:
         try:

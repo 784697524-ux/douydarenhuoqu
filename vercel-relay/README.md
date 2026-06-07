@@ -50,3 +50,10 @@ python3 scripts/vercel_relay_worker.py --once
 ```
 
 Use `--once` for tests. Remove `--once` for continuous polling.
+
+On macOS, the worker automatically reads the system HTTPS proxy from `scutil --proxy`.
+If needed, override it manually:
+
+```bash
+python3 scripts/vercel_relay_worker.py --proxy http://127.0.0.1:7890
+```
