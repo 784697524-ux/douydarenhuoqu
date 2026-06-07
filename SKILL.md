@@ -55,6 +55,22 @@ python3 scripts/install_local.py
 douyin-talent-contact 001 --wait-ready 60
 ```
 
+6. Optional: trigger from DingTalk through a stable Vercel HTTPS relay:
+
+```bash
+cd vercel-relay
+npm install
+npm test
+```
+
+Deploy `vercel-relay` to Vercel, set `RELAY_TOKEN` and `WORKER_TOKEN`, then run the local worker on the Chrome machine:
+
+```bash
+export DOUYIN_RELAY_URL="https://<your-vercel-domain>"
+export DOUYIN_RELAY_WORKER_TOKEN="<WORKER_TOKEN>"
+python3 scripts/vercel_relay_worker.py
+```
+
 ## Guardrails
 
 - Never open `查看联系方式` before `prepare` returns `skip_keys`, cached contacts, and available quota.
@@ -72,6 +88,8 @@ douyin-talent-contact 001 --wait-ready 60
 - `scripts/sync_talent.py`: table prepare/commit/verify logic used by both backends.
 - `scripts/feishu_notable_adapter.py`: maps Feishu Base record commands to the notable-style interface expected by `sync_talent.py`.
 - `scripts/launch_debug_chrome.py`: starts a dedicated Chrome profile on CDP port `9222`.
+- `scripts/vercel_relay_worker.py`: polls the Vercel HTTPS relay and executes queued tasks locally.
+- `vercel-relay/`: Vercel serverless relay for DingTalk button HTTP requests.
 
 ## References
 

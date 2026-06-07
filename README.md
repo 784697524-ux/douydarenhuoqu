@@ -192,6 +192,45 @@ douyin-talent-contact 001 --wait-ready 60
 }
 ```
 
+## 钉钉按钮触发（Vercel HTTPS 中转）
+
+仓库内置了一个 Vercel Relay：
+
+```text
+vercel-relay/
+```
+
+它只负责提供公网 HTTPS 入口和任务队列，不在云端登录抖音，也不保存 Chrome Cookie。真正执行达人广场筛选和联系方式查看的仍然是本机 worker。
+
+部署到 Vercel 后，钉钉 AI 表自动化 HTTP 请求填：
+
+```text
+POST https://<你的-vercel-域名>/api/jobs
+Authorization: Bearer <RELAY_TOKEN>
+Content-Type: application/json
+```
+
+Body：
+
+```json
+{
+  "task_id": "{{任务编号}}",
+  "wait_ready": 60,
+  "reserve_quota": 0,
+  "smoke": false
+}
+```
+
+本机启动 worker：
+
+```bash
+export DOUYIN_RELAY_URL="https://<你的-vercel-域名>"
+export DOUYIN_RELAY_WORKER_TOKEN="<WORKER_TOKEN>"
+python3 scripts/vercel_relay_worker.py
+```
+
+长期使用需要给 Vercel Relay 连接 Vercel KV 或 Upstash Redis，否则没有持久队列，Vercel 冷启动时可能丢任务。
+
 ## 去重和额度规则
 
 脚本会先执行 `prepare`，读取：

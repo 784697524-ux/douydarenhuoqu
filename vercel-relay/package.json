@@ -1,0 +1,13 @@
+{
+  "name": "douyin-talent-vercel-relay",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/local-store-smoke.mjs"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.35.3"
+  },
+  "devDependencies": {}
+}
