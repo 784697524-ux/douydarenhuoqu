@@ -1,4 +1,4 @@
-import { requireBearer, sendJson } from "../lib/auth.js";
+import { requireBearer, sendJson, withoutAuthFields } from "../lib/auth.js";
 import { readJson } from "../lib/body.js";
 import { completeJob, enqueueJob, getJob, storeMode, takeNextJob } from "../lib/store.js";
 
@@ -8,10 +8,11 @@ function routeOf(req) {
 }
 
 async function createJob(req, res) {
-  const auth = requireBearer(req, "RELAY_TOKEN");
-  if (!auth.ok) return sendJson(res, auth.status, { ok: false, error: auth.error });
   if (req.method === "POST") {
-    const job = await enqueueJob(await readJson(req));
+    const input = await readJson(req);
+    const auth = requireBearer(req, "RELAY_TOKEN", { allowTokenParam: true, body: input });
+    if (!auth.ok) return sendJson(res, auth.status, { ok: false, error: auth.error });
+    const job = await enqueueJob(withoutAuthFields(input));
     return sendJson(res, 200, {
       ok: true,
       status: "queued",
@@ -21,6 +22,8 @@ async function createJob(req, res) {
     });
   }
   if (req.method === "GET") {
+    const auth = requireBearer(req, "RELAY_TOKEN", { allowTokenParam: true });
+    if (!auth.ok) return sendJson(res, auth.status, { ok: false, error: auth.error });
     const url = new URL(req.url, "https://relay.local");
     const id = url.searchParams.get("id");
     if (!id) return sendJson(res, 400, { ok: false, error: "missing id" });
@@ -47,6 +50,7 @@ async function finishJob(req, res) {
 export default async function handler(req, res) {
   try {
     const route = routeOf(req);
+    if (route === "ping") return sendJson(res, 200, { ok: true, status: "ok", store: storeMode() });
     if (route === "jobs") return await createJob(req, res);
     if (route === "next") return await nextJob(req, res);
     if (route === "complete") return await finishJob(req, res);

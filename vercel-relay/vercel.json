@@ -11,6 +11,10 @@
     {
       "source": "/api/complete",
       "destination": "/api/relay?route=complete"
+    },
+    {
+      "source": "/api/ping",
+      "destination": "/api/relay?route=ping"
     }
   ],
   "functions": {

@@ -8,6 +8,7 @@ This relay gives DingTalk AI Table automation a stable HTTPS endpoint while keep
 - `GET /api/next`: local worker pulls one queued task.
 - `POST /api/complete`: local worker reports execution result.
 - `GET /api/jobs?id=<job_id>`: query job status.
+- `GET /api/ping`: public connectivity check for DingTalk HTTP automation.
 
 ## Required Vercel environment variables
 
@@ -37,6 +38,7 @@ Without Redis/KV/Blob, the relay falls back to in-memory storage. That is only f
 
 ```json
 {
+  "relay_token": "<RELAY_TOKEN>",
   "task_id": "{{任务编号}}",
   "wait_ready": 60,
   "reserve_quota": 0,
@@ -50,6 +52,10 @@ Headers:
 Content-Type: application/json
 Authorization: Bearer <RELAY_TOKEN>
 ```
+
+If the DingTalk HTTP component cannot pass `Authorization`, put `relay_token`
+in the JSON body as shown above. The relay removes `relay_token` before storing
+the job payload.
 
 ## Local worker
 
