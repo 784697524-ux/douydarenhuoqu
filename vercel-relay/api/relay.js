@@ -12,7 +12,7 @@ async function createJob(req, res) {
   if (!auth.ok) return sendJson(res, auth.status, { ok: false, error: auth.error });
   if (req.method === "POST") {
     const job = await enqueueJob(await readJson(req));
-    return sendJson(res, 202, {
+    return sendJson(res, 200, {
       ok: true,
       status: "queued",
       job_id: job.id,
