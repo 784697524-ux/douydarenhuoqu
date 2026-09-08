@@ -14,23 +14,15 @@ DEFAULT_DOUYIN_URL = (
     "https://life.douyin.com/p/liteapp/alliance_merchant/merchant/talent/square"
     "?enter_from=pc_menu_daren_square"
 )
-DEFAULT_DINGTALK_HELPER = (
-    Path.home()
-    / ".codex"
-    / "skills"
-    / "dingtalk-knowledge-manager"
-    / "scripts"
-    / "dingtalk_tool.py"
-)
 
 DEFAULT_CONFIG: dict[str, Any] = {
     "backend": "dingtalk",
+    "dws_binary": "dws",
     "chrome_cdp_url": "http://127.0.0.1:9222",
     "douyin_url": DEFAULT_DOUYIN_URL,
     "quota": {"daily_quota": 30, "reserve_quota": 0, "max_contact_views": 1},
     "account": "auto",
     "dingtalk": {
-        "helper": str(DEFAULT_DINGTALK_HELPER),
         "base_id": "",
         "config_sheet": "",
         "result_sheet": "",
@@ -38,16 +30,6 @@ DEFAULT_CONFIG: dict[str, Any] = {
         "contact_log_sheet": "",
         "quota_sheet": "",
         "cursor_sheet": "",
-    },
-    "feishu": {
-        "base_token": "",
-        "config_table": "",
-        "result_table": "",
-        "master_table": "",
-        "contact_log_table": "",
-        "quota_table": "",
-        "cursor_table": "",
-        "as": "user",
     },
 }
 
@@ -65,9 +47,7 @@ def deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]
 def load_config(path: Path | str | None = None) -> dict[str, Any]:
     config_path = Path(path or DEFAULT_CONFIG_PATH).expanduser()
     if not config_path.exists():
-        raise FileNotFoundError(
-            f"config not found: {config_path}. Run scripts/init_tables.py --write-config first."
-        )
+        return copy.deepcopy(DEFAULT_CONFIG)
     data = json.loads(config_path.read_text(encoding="utf-8"))
     if not isinstance(data, dict):
         raise ValueError("config root must be a JSON object")
@@ -81,11 +61,11 @@ def save_config(config: dict[str, Any], path: Path | str | None = None) -> Path:
     return config_path
 
 
-def backend_config(config: dict[str, Any]) -> dict[str, Any]:
+def dingtalk_config(config: dict[str, Any]) -> dict[str, Any]:
     backend = str(config.get("backend") or "dingtalk")
-    if backend not in {"dingtalk", "feishu"}:
-        raise ValueError("backend must be 'dingtalk' or 'feishu'")
-    return config[backend]
+    if backend != "dingtalk":
+        raise ValueError("backend must be 'dingtalk'")
+    return config["dingtalk"]
 
 
 def require_keys(data: dict[str, Any], keys: list[str], label: str) -> None:
