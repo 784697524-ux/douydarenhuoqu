@@ -18,12 +18,14 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 SKILL_DIR = SCRIPT_DIR.parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from runtime_config import DEFAULT_CONFIG_PATH, DEFAULT_DOUYIN_URL, load_config, require_keys  # noqa: E402
+from dws_client import DwsClient, FieldCodec  # noqa: E402
+from init_tables import create_base_with_tables, ensure_tables  # noqa: E402
+from runtime_config import DEFAULT_CONFIG_PATH, DEFAULT_DOUYIN_URL, load_config, require_keys, save_config  # noqa: E402
 
 SYNC = SCRIPT_DIR / "sync_talent.py"
 BROWSER = SCRIPT_DIR / "douyin_browser_runner_selenium.py"
 LAUNCH_CHROME = SCRIPT_DIR / "launch_debug_chrome.py"
-FEISHU_ADAPTER = SCRIPT_DIR / "feishu_notable_adapter.py"
+DEFAULT_BASE_NAME = "达人广场筛选与联系回填配置"
 
 
 def run_json(cmd: list[str]) -> dict[str, Any]:
@@ -80,31 +82,15 @@ def url_with_groupid(url: str, groupid: str) -> str:
 
 
 def table_config(args: argparse.Namespace) -> dict[str, Any]:
-    backend = args.settings.get("backend")
-    if backend == "dingtalk":
-        config = dict(args.settings["dingtalk"])
-        require_keys(config, ["base_id", "config_sheet", "result_sheet"], "dingtalk")
-        config["helper"] = str(Path(str(config.get("helper") or "")).expanduser())
-        return config
-    if backend == "feishu":
-        source = args.settings["feishu"]
-        require_keys(source, ["base_token", "config_table", "result_table"], "feishu")
-        return {
-            "helper": str(FEISHU_ADAPTER),
-            "base_id": source["base_token"],
-            "config_sheet": source["config_table"],
-            "result_sheet": source["result_table"],
-            "master_sheet": source.get("master_table", ""),
-            "contact_log_sheet": source.get("contact_log_table", ""),
-            "quota_sheet": source.get("quota_table", ""),
-            "cursor_sheet": source.get("cursor_table", ""),
-        }
-    raise RuntimeError("backend must be dingtalk or feishu")
+    config = dict(args.settings["dingtalk"])
+    require_keys(config, ["base_id", "config_sheet", "result_sheet"], "dingtalk")
+    return config
 
 
 def backend_common_args(args: argparse.Namespace) -> list[str]:
-    config = table_config(args)
-    return ["--helper", str(config["helper"]), "--base-id", str(config["base_id"])]
+    table_config(args)
+    return ["--dws-binary", str(args.settings.get("dws_binary") or "dws"),
+            "--base-id", str(args.settings["dingtalk"]["base_id"])]
 
 
 def ensure_cdp_page(cdp_url: str, talent_square_url: str) -> None:
@@ -317,21 +303,11 @@ def write_cursor(args: argparse.Namespace, prepare_data: dict[str, Any], browser
             }
         }
     ]
-    response = run_json(
-        [
-            sys.executable,
-            str(config["helper"]),
-            "notable",
-            "records-add",
-            "--base-id",
-            str(config["base_id"]),
-            "--sheet-id",
-            str(config["cursor_sheet"]),
-            "--records-json",
-            json.dumps(cursor, ensure_ascii=False),
-        ]
-    )
-    return response.get("value", [{}])[0].get("id", "")
+    client = DwsClient(binary=str(args.settings.get("dws_binary") or "dws"))
+    codec = FieldCodec(client, str(config["base_id"]), str(config["cursor_sheet"]))
+    payload = [codec.encode_record(record) for record in cursor]
+    client.create_records(str(config["base_id"]), str(config["cursor_sheet"]), payload)
+    return ""
 
 
 def update_config_result(args: argparse.Namespace, prepare_data: dict[str, Any], browser_data: dict[str, Any], commit_data: dict[str, Any], cursor_id: str) -> None:
@@ -350,26 +326,44 @@ def update_config_result(args: argparse.Namespace, prepare_data: dict[str, Any],
         f"联系方式错误={len(browser_data.get('contact_errors') or [])}。"
         f"{commit_text}。游标记录={cursor_id}。"
     )
-    payload = [{"id": record_id, "fields": {"执行结果": text}}]
-    run_text(
-        [
-            sys.executable,
-            str(config["helper"]),
-            "notable",
-            "records-update",
-            "--base-id",
-            str(config["base_id"]),
-            "--sheet-id",
-            str(config["config_sheet"]),
-            "--records-json",
-            json.dumps(payload, ensure_ascii=False),
-        ]
+    client = DwsClient(binary=str(args.settings.get("dws_binary") or "dws"))
+    codec = FieldCodec(client, str(config["base_id"]), str(config["config_sheet"]))
+    client.update_records(
+        str(config["base_id"]),
+        str(config["config_sheet"]),
+        [codec.encode_record({"id": record_id, "fields": {"执行结果": text}})],
     )
+
+
+def auto_provision(args: argparse.Namespace) -> dict[str, Any]:
+    """First use: automatically create the Base and all six tables, then persist config."""
+    dingtalk = args.settings.setdefault("dingtalk", {})
+    if not str(dingtalk.get("base_id") or "").strip():
+        client = DwsClient(binary=str(args.settings.get("dws_binary") or "dws"))
+        result = create_base_with_tables(client, DEFAULT_BASE_NAME)
+        dingtalk["base_id"] = result["base_id"]
+        print(json.dumps({
+            "auto_provision": "created_base",
+            "base_id": result["base_id"],
+            "doc_url": result["doc_url"],
+            "tables": result["tables"],
+        }, ensure_ascii=False))
+    else:
+        client = DwsClient(binary=str(args.settings.get("dws_binary") or "dws"))
+        ensure_tables(client, str(dingtalk["base_id"]))
+    tables = client.list_tables(str(dingtalk["base_id"]))
+    from schema_spec import TABLE_KEYS
+    for table_name, config_key in TABLE_KEYS.items():
+        if not str(dingtalk.get(config_key) or "").strip() and tables.get(table_name):
+            dingtalk[config_key] = tables[table_name]
+    save_config(args.settings, args.config)
+    return args.settings
 
 
 def run(args: argparse.Namespace) -> dict[str, Any]:
     out_dir = args.out_dir or Path("/private/tmp") / f"douyin_task_{args.task_id}_{dt.datetime.now().strftime('%Y%m%d%H%M%S')}"
     out_dir.mkdir(parents=True, exist_ok=True)
+    auto_provision(args)
     assert_cdp_ready(args)
     args.account = browser_account(args)
     prepare_data = prepare(args, out_dir)
