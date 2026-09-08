@@ -1,184 +1,103 @@
+<p align="center">
+  <img src="./assets/readme/hero.svg" width="100%"
+       alt="抖音来客达人广场联系方式自动采集回填：按配置表筛选达人，自动查看联系方式，去重后回写钉钉 AI 表">
+</p>
+
 # 抖音来客达人广场获取联系方式
 
-这个仓库封装了一个可复用的 Codex Skill/本地脚本，用于按配置表自动筛选抖音来客达人广场，获取达人基础信息和微信联系方式，并回写到钉钉 AI 表或飞书多维表。
+一个可复用的本地自动化工具：在钉钉 AI 表里写一行筛选条件，脚本自动打开抖音来客达人广场、应用筛选、采集达人数据与联系方式，去重后回写六张钉钉 AI 表。**首次使用自动创建全部数据表，无需手工建表。**
 
-核心目标：
+## 核心特性
 
-- 用表格配置任务，不手工重复筛选。
-- 获取达人基础数据、微信号、虚拟手机号。
-- 已有联系方式自动跳过，不重复消耗每日联系方式查看额度。
-- 每次运行写入结果表、达人主档、联系方式日志、每日额度审计、任务游标。
+- **表格驱动**：筛选条件全部写在钉钉 AI 表「配置表」里，改表即改任务，不碰代码
+- **首次自动建表**：第一次运行时自动在你的钉钉组织里创建 Base 与全部六张表（含字段），缺表缺字段自动补齐
+- **额度保护**：「查看联系方式」每天有查看次数限制；已有联系方式的达人自动跳过，绝不重复消耗额度
+- **历史去重**：按 `达人UID → 抖音号 → 昵称+城市+品类` 三级去重，跑过的达人不再重复采集
+- **全链路落库**：结果、达人主档、查看日志、每日额度审计、任务游标五张表完整留痕
 
-## 目录
+## 工作原理
 
-```text
-.
-├── SKILL.md
-├── README.md
-├── agents/openai.yaml
-├── references/config.example.json
-├── references/schema.md
-├── scripts/
-│   ├── douyin-talent-contact
-│   ├── douyin_browser_runner_selenium.py
-│   ├── feishu_notable_adapter.py
-│   ├── init_tables.py
-│   ├── install_local.py
-│   ├── launch_debug_chrome.py
-│   ├── run_talent_task.py
-│   ├── runtime_config.py
-│   ├── schema_spec.py
-│   └── sync_talent.py
-└── tests/test_skill_package.py
-```
+<p align="center">
+  <img src="./assets/readme/workflow.svg" width="100%"
+       alt="五步流程：读取配置表、历史去重与额度计算、Chrome 打开达人广场采集、查看联系方式弹窗、回写五张表">
+</p>
 
-## 前置条件
+## 六张数据表
 
-1. 本机已安装 Python 3。
-2. 已登录抖音来客账号，并且该账号有达人广场权限。
-3. 如果使用钉钉 AI 表：本机已有可用的 `dingtalk_tool.py`。
-4. 如果使用飞书多维表：本机已有可用的 `lark-cli`，并完成登录授权。
-5. Chrome 需要以 CDP 调试模式运行，默认地址是 `http://127.0.0.1:9222`。
+<p align="center">
+  <img src="./assets/readme/tables.svg" width="100%"
+       alt="配置表为输入核心，任务执行后向结果表、达人主档表、联系方式查看日志、每日额度审计、任务执行游标表五张表落库">
+</p>
 
-## 安装本地命令
+## 快速开始
 
-在仓库目录执行：
+### 前置条件
+
+1. 本机已安装 Python 3 和 Node.js（≥ 18）
+2. 已安装 Selenium：`pip3 install selenium`
+3. 已安装钉钉 CLI 并登录一次：
 
 ```bash
-python3 scripts/install_local.py
+npm install -g dingtalk-workspace-cli
+dws auth login
 ```
 
-安装后默认命令是：
+### 首次使用（自动建表）
+
+直接跑一个任务，脚本会自动创建 Base「达人广场筛选与联系回填配置」和全部六张表：
 
 ```bash
-douyin-talent-contact <任务ID>
+python3 scripts/run_talent_task.py --task-id 001 --smoke --wait-ready 60
 ```
 
-如果 `~/.local/bin` 不在 PATH 中，先执行：
+也可以先显式建表（推荐，方便先确认建在哪个组织）：
 
 ```bash
-export PATH="$HOME/.local/bin:$PATH"
+# 全新 Base + 六张表
+python3 scripts/init_tables.py --create-base --write-config
+
+# 或在已有 Base 内补齐六张表
+python3 scripts/init_tables.py --base-id <你的BASE_ID> --write-config
 ```
 
-## 创建或修复表结构
+表 ID 会写入本地配置 `~/.douyin-life-talent-contact/config.json`（参考 [`references/config.example.json`](references/config.example.json)）。
 
-### 钉钉 AI 表
+### 登录抖音来客
 
-```bash
-python3 scripts/init_tables.py \
-  --backend dingtalk \
-  --base-id <DINGTALK_BASE_ID> \
-  --write-config
-```
-
-### 飞书多维表
-
-```bash
-python3 scripts/init_tables.py \
-  --backend feishu \
-  --base-token <FEISHU_BASE_TOKEN> \
-  --write-config
-```
-
-执行后会生成本地配置文件：
-
-```text
-~/.douyin-life-talent-contact/config.json
-```
-
-所有个人信息、表 ID、企业账号信息都应该只写在这个本地配置文件里，不要提交到仓库。
-
-## 配置文件
-
-可以参考：
-
-```text
-references/config.example.json
-```
-
-钉钉最小配置示例：
-
-```json
-{
-  "backend": "dingtalk",
-  "chrome_cdp_url": "http://127.0.0.1:9222",
-  "douyin_url": "https://life.douyin.com/p/liteapp/alliance_merchant/merchant/talent/square?enter_from=pc_menu_daren_square",
-  "quota": {
-    "daily_quota": 30,
-    "reserve_quota": 0,
-    "max_contact_views": 1
-  },
-  "account": "auto",
-  "dingtalk": {
-    "helper": "~/.codex/skills/dingtalk-knowledge-manager/scripts/dingtalk_tool.py",
-    "base_id": "<DINGTALK_BASE_ID>",
-    "config_sheet": "<CONFIG_SHEET_ID>",
-    "result_sheet": "<RESULT_SHEET_ID>",
-    "master_sheet": "<MASTER_SHEET_ID>",
-    "contact_log_sheet": "<CONTACT_LOG_SHEET_ID>",
-    "quota_sheet": "<QUOTA_SHEET_ID>",
-    "cursor_sheet": "<CURSOR_SHEET_ID>"
-  }
-}
-```
-
-## 启动 Chrome
+启动专用 Chrome（CDP 调试模式，端口 9222），并在这个窗口里登录一次抖音来客：
 
 ```bash
 python3 scripts/launch_debug_chrome.py
 ```
 
-第一次启动后，在这个 Chrome 窗口里登录抖音来客。
+### 配置任务
 
-如需绑定具体商家账号，可以在配置里的 `douyin_url` 里填入对应账号打开后的达人广场 URL。不要把带真实 `groupid` 的 URL 提交到仓库。
-
-## 配置任务
-
-在 `配置表` 中新增或启用一行：
+在钉钉 AI 表「配置表」里新增一行：
 
 | 字段 | 示例 | 说明 |
 | --- | --- | --- |
-| 启用 | 是 | 只有启用为“是”的任务会执行 |
-| 任务ID 或 任务编号 | 001 | 命令行传入的任务编号 |
+| 启用 | 是 | 只有 `是` 的任务会执行 |
+| 任务ID | 001 | 命令行传入的编号 |
 | 常驻城市 | 杭州 | 达人广场城市筛选 |
-| 优势品类 | 美食 | 达人广场品类筛选 |
-| 视频带货力 | Lv3, Lv4, Lv5 | 支持多选 |
-| 有微信/电话 | 有 | 优先筛有联系方式达人 |
-| 达人类型 | 全部达人 | 可按页面能力填写 |
+| 优势品类 | 美食 | 品类筛选 |
+| 视频带货力 | Lv6,Lv7 | 支持多选 |
+| 有微信/电话 | 是 | 优先筛有联系方式的达人 |
 | 查询次数 | 1 | 本任务最多打开多少次联系方式弹窗 |
-| 每页数量 | 10 | 记录用途，页面默认每页 10 条 |
 
-## 运行前检查
-
-```bash
-douyin-talent-contact doctor --wait-ready 60
-```
-
-返回中应看到：
-
-```json
-{
-  "ok": true,
-  "talent_square_ready": true,
-  "next_action": "run_task"
-}
-```
-
-## 安全试跑
-
-安全试跑不会点击“查看联系方式”，不会写表，不消耗额度：
+### 运行
 
 ```bash
+# 安装短命令（可选）
+python3 scripts/install_local.py
+
+# 安全试跑：不点联系方式、不写表、不耗额度
 douyin-talent-contact 001 --smoke --wait-ready 60
-```
 
-## 正式执行
-
-```bash
+# 正式执行
 douyin-talent-contact 001 --wait-ready 60
 ```
 
-成功后会输出类似：
+成功输出示例：
 
 ```json
 {
@@ -192,134 +111,70 @@ douyin-talent-contact 001 --wait-ready 60
 }
 ```
 
-## 钉钉按钮触发（Vercel HTTPS 中转）
+## 去重与额度规则
 
-仓库内置了一个 Vercel Relay：
+脚本在采集前先读结果表、达人主档表、联系方式查看日志、额度审计四张表，计算 `skip_keys` 与可用额度：
 
-```text
-vercel-relay/
-```
-
-它只负责提供公网 HTTPS 入口和任务队列，不在云端登录抖音，也不保存 Chrome Cookie。真正执行达人广场筛选和联系方式查看的仍然是本机 worker。
-
-部署到 Vercel 后，钉钉 AI 表自动化 HTTP 请求填：
-
-```text
-POST https://<你的-vercel-域名>/api/jobs
-Authorization: Bearer <RELAY_TOKEN>
-Content-Type: application/json
-```
-
-Body：
-
-```json
-{
-  "task_id": "{{任务编号}}",
-  "wait_ready": 60,
-  "reserve_quota": 0,
-  "smoke": false
-}
-```
-
-本机启动 worker：
-
-```bash
-export DOUYIN_RELAY_URL="https://<你的-vercel-域名>"
-export DOUYIN_RELAY_WORKER_TOKEN="<WORKER_TOKEN>"
-python3 scripts/vercel_relay_worker.py
-```
-
-长期使用需要持久队列。当前 Relay 支持的优先级是：
-
-```text
-Redis/KV -> Vercel Blob -> memory
-```
-
-默认推荐用 Vercel Blob：
-
-```bash
-cd vercel-relay
-vercel blob create-store douyin-talent-relay-queue --access private --yes --environment production --environment preview --environment development
-```
-
-如果没有 Redis/KV/Blob，Relay 会退回内存队列，只适合烟测，不适合长期使用。
-
-## 去重和额度规则
-
-脚本会先执行 `prepare`，读取：
-
-- `结果表`
-- `达人主档表`
-- `联系方式查看日志`
-- `每日30次额度审计`
-
-去重顺序：
-
-1. `达人UID`
-2. `抖音号`
-3. `达人昵称 + 城市 + 品类`
-
-如果达人已经有微信号：
-
-- 不会再次点击“查看联系方式”。
-- 不会再次消耗每日 30 次额度。
-- 如果主档或日志中有缓存联系方式，但结果表还没有，可复用缓存写入结果表，`是否消耗额度=否`。
-
-如果是新达人且没有缓存联系方式：
-
-- 只有在未超过 `查询次数` 和每日额度时才会打开联系方式弹窗。
-- 成功查看后写入结果表、主档表、日志表和额度审计表。
+- **去重顺序**：`达人UID` → `抖音号` → `达人昵称+达人城市+达人品类`
+- **已有微信号的达人**：不再点击「查看联系方式」，不消耗每日额度
+- **缓存复用**：主档/日志中有缓存联系方式但结果表还没有的，复用写入且 `是否消耗额度=否`
+- **新达人**：只有在未超过配置表「查询次数」且每日额度未用完时才打开弹窗
+- **不想消耗额度**：用 `--smoke`，或把「查询次数」设为 `0`
 
 ## 常见问题
 
-### 命令找不到任务
+<details>
+<summary>命令找不到任务</summary>
 
-报错类似：
+报错 `No active config row found where 启用=是 ...` 时，检查配置表的 `启用` 是否为 `是`、`任务ID` 是否与命令一致。
+</details>
+
+<details>
+<summary>页面停在达人广场但命令不继续</summary>
+
+先运行 `douyin-talent-contact doctor --wait-ready 60`。若 `talent_square_ready=false`，通常是 Chrome 未登录、账号不对或 CDP Chrome 不是当前登录账号。
+</details>
+
+<details>
+<summary>钉钉接口偶发超时</summary>
+
+脚本已对 HTTP 5xx/429/超时做最多 3 次重试；持续失败通常是网络或钉钉服务临时异常，稍后重跑。
+</details>
+
+<details>
+<summary>想接入自己的流程</summary>
+
+本仓库的能力已按层拆分：`dws_client.py` 负责钉钉 AI 表读写（fieldId 转换），`sync_talent.py` 提供 `prepare / commit / verify / provision-schema` 子命令，可直接组合调用。
+</details>
+
+## 目录结构
 
 ```text
-No active config row found where 启用=是 and 任务ID/任务编号=001
+.
+├── SKILL.md                     # Agent 技能定义（可直接交给 AI 助手执行）
+├── scripts/
+│   ├── dws_client.py            # 钉钉 dws CLI 封装（唯一对外接口层）
+│   ├── init_tables.py           # 首次建表 / 补表（Base + 六张表）
+│   ├── run_talent_task.py       # 任务编排：自动建表 → 采集 → 回写
+│   ├── sync_talent.py           # 去重、额度、记录映射、回写
+│   ├── douyin_browser_runner_selenium.py  # Selenium/CDP 浏览器采集
+│   ├── launch_debug_chrome.py   # 启动 CDP 调试 Chrome
+│   ├── install_local.py         # 安装 douyin-talent-contact 短命令
+│   └── douyin-talent-contact    # 入口 wrapper
+├── references/                  # 表结构说明与示例配置
+├── tests/                       # 单元测试
+└── assets/readme/               # README 插图（SVG 源文件）
 ```
 
-检查配置表：
+## 敏感信息规则
 
-- `启用` 是否为 `是`
-- `任务ID` 或 `任务编号` 是否和命令一致
+以下内容**只**放在本地 `~/.douyin-life-talent-contact/config.json`，不要提交到仓库：
 
-### 页面停在达人广场但命令不继续
-
-先运行：
-
-```bash
-douyin-talent-contact doctor --wait-ready 60
-```
-
-如果 `talent_square_ready=false`，通常是 Chrome 没有登录、账号不对、页面加载失败，或 CDP Chrome 不是当前登录账号。
-
-### 钉钉接口偶发超时
-
-脚本已经对 `HTTP 5xx/429/socket.timeout/timed out` 做了最多 3 次重试。持续失败时，通常是网络或钉钉接口临时异常。
-
-### 不想消耗额度
-
-使用：
-
-```bash
-douyin-talent-contact 001 --smoke
-```
-
-或在配置表把 `查询次数` 设为 `0` 或空值，并用 `--max-contact-views 0`。
-
-## 本仓库不应包含的敏感信息
-
-不要提交：
-
-- 真实 `base_id` / `sheet_id` / `base_token` / `table_id`
+- 真实 `base_id` / `sheet_id`
 - 真实商家账号名称
 - 带真实 `groupid` 的抖音来客 URL
 - token、cookie、手机号、微信号明细
 
-这些信息只放在本地：
+## License
 
-```text
-~/.douyin-life-talent-contact/config.json
-```
+MIT
