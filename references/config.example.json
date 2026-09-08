@@ -1,5 +1,6 @@
 {
   "backend": "dingtalk",
+  "dws_binary": "dws",
   "chrome_cdp_url": "http://127.0.0.1:9222",
   "douyin_url": "https://life.douyin.com/p/liteapp/alliance_merchant/merchant/talent/square?enter_from=pc_menu_daren_square",
   "quota": {
@@ -9,7 +10,6 @@
   },
   "account": "auto",
   "dingtalk": {
-    "helper": "~/.codex/skills/dingtalk-knowledge-manager/scripts/dingtalk_tool.py",
     "base_id": "",
     "config_sheet": "",
     "result_sheet": "",
@@ -17,15 +17,5 @@
     "contact_log_sheet": "",
     "quota_sheet": "",
     "cursor_sheet": ""
-  },
-  "feishu": {
-    "base_token": "",
-    "config_table": "",
-    "result_table": "",
-    "master_table": "",
-    "contact_log_table": "",
-    "quota_table": "",
-    "cursor_table": "",
-    "as": "user"
   }
 }
