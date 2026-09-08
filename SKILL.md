@@ -1,34 +1,43 @@
 ---
 name: douyin-life-talent-contact
-description: Use when Codex or a local operator needs to initialize DingTalk AI Table or Feishu Base schemas, run Douyin Life/抖音来客达人广场 filters in Chrome, avoid duplicate contact lookups, and write influencer basics plus WeChat contact information back to configured tables.
+description: Use when a local operator needs to initialize DingTalk AI Table schemas, run Douyin Life/抖音来客达人广场 filters in Chrome, avoid duplicate contact lookups, and write influencer basics plus WeChat contact information back to configured tables.
 ---
 
 # 抖音来客达人广场获取联系方式
 
-Use this skill for tasks like: “按配置表执行达人广场任务”, “创建达人联系方式回填 AI 表”, “运行任务 001 并避免重复查看联系方式”.
+Use this skill for tasks like: "按配置表执行达人广场任务", "创建达人联系方式回填 AI 表", "运行任务 001 并避免重复查看联系方式".
 
 ## Workflow
 
-1. Initialize tables and local config:
+1. Install the public DingTalk CLI and log in once:
 
 ```bash
-python3 scripts/init_tables.py --backend dingtalk --base-id <DINGTALK_BASE_ID> --write-config
+npm install -g dingtalk-workspace-cli
+dws auth login
 ```
 
-For Feishu schema provisioning:
+2. First run auto-provisions everything. Either run a task directly:
 
 ```bash
-python3 scripts/init_tables.py --backend feishu --base-token <FEISHU_BASE_TOKEN> --write-config
+python3 scripts/run_talent_task.py --task-id 001 --wait-ready 60
 ```
 
-2. Fill one enabled config row in `配置表`:
+…which creates the Base「达人广场筛选与联系回填配置」and all six tables on first use, or provision explicitly:
+
+```bash
+python3 scripts/init_tables.py --create-base --write-config
+# 或在已有 Base 内补齐六张表：
+python3 scripts/init_tables.py --base-id <DINGTALK_BASE_ID> --write-config
+```
+
+3. Fill one enabled config row in `配置表`:
 
 - `启用`: `是`
 - `任务ID` or `任务编号`: e.g. `001`
 - filter fields: `常驻城市`, `优势品类`, `视频带货力`, `有微信/电话`, `达人类型`
 - `查询次数`: max contact popups for this task
 
-3. Start or connect Chrome CDP:
+4. Start or connect Chrome CDP:
 
 ```bash
 python3 scripts/launch_debug_chrome.py
@@ -36,13 +45,13 @@ python3 scripts/launch_debug_chrome.py
 
 Log in to Douyin Life in that Chrome window once.
 
-4. Smoke test without viewing contacts or writing tables:
+5. Smoke test without viewing contacts or writing tables:
 
 ```bash
 scripts/douyin-talent-contact 001 --smoke --wait-ready 60
 ```
 
-5. Run the real task:
+6. Run the real task:
 
 ```bash
 scripts/douyin-talent-contact 001 --wait-ready 60
@@ -55,30 +64,6 @@ python3 scripts/install_local.py
 douyin-talent-contact 001 --wait-ready 60
 ```
 
-6. Optional: trigger from DingTalk through a stable Vercel HTTPS relay:
-
-```bash
-cd vercel-relay
-npm install
-npm test
-```
-
-Deploy `vercel-relay` to Vercel, set `RELAY_TOKEN` and `WORKER_TOKEN`, then run the local worker on the Chrome machine:
-
-```bash
-export DOUYIN_RELAY_URL="https://<your-vercel-domain>"
-export DOUYIN_RELAY_WORKER_TOKEN="<WORKER_TOKEN>"
-python3 scripts/vercel_relay_worker.py
-```
-
-For a durable relay queue, create a private Vercel Blob store in `vercel-relay`:
-
-```bash
-vercel blob create-store douyin-talent-relay-queue --access private --yes --environment production --environment preview --environment development
-```
-
-The store priority is `Redis/KV -> Vercel Blob -> memory`. Memory mode is only for smoke tests.
-
 ## Guardrails
 
 - Never open `查看联系方式` before `prepare` returns `skip_keys`, cached contacts, and available quota.
@@ -89,21 +74,14 @@ The store priority is `Redis/KV -> Vercel Blob -> memory`. Memory mode is only f
 
 ## Scripts
 
-- `scripts/init_tables.py`: creates or repairs the 6-table schema and can write local config.
-- `scripts/run_talent_task.py`: config-driven runner for browser filtering, contact lookup, DingTalk/Feishu writeback, cursor/status writeback.
+- `scripts/init_tables.py`: creates or repairs the 6-table schema and writes local config; supports creating a brand-new Base first.
+- `scripts/run_talent_task.py`: config-driven runner: auto-provisions tables, applies browser filtering, looks up contacts, writes results/cursor/status back.
 - `scripts/douyin_browser_runner_selenium.py`: Selenium/CDP browser collector used by the current runner; it handles Chrome 148+ CDP behavior and waits for filtered rows before writing.
-- `scripts/douyin_browser_runner.py`: legacy Playwright/CDP browser collector kept for reference.
-- `scripts/sync_talent.py`: table prepare/commit/verify logic used by both backends.
-- `scripts/feishu_notable_adapter.py`: maps Feishu Base record commands to the notable-style interface expected by `sync_talent.py`.
+- `scripts/sync_talent.py`: table prepare/commit/verify logic (dedupe, quota, record mapping).
+- `scripts/dws_client.py`: the only module that talks to the `dws` CLI; converts fieldId-keyed cells to Chinese field names.
 - `scripts/launch_debug_chrome.py`: starts a dedicated Chrome profile on CDP port `9222`.
-- `scripts/vercel_relay_worker.py`: polls the Vercel HTTPS relay and executes queued tasks locally.
-- `vercel-relay/`: Vercel serverless relay for DingTalk button HTTP requests.
 
 ## References
 
 - Read `references/schema.md` before changing field names.
 - Use `references/config.example.json` when creating a user-specific config manually.
-
-## Backend Note
-
-DingTalk and Feishu use the same six-table schema. DingTalk talks to `dingtalk_tool.py`; Feishu talks to `lark-cli` through `scripts/feishu_notable_adapter.py`. Always run `--smoke` first in a new tenant because field permissions and contact popup permissions differ by organization/account.
