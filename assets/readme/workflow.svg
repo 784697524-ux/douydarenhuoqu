@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="1200" height="560" viewBox="0 0 1200 560"
+     role="img" aria-labelledby="wfTitle wfDesc">
+  <title id="wfTitle">工作原理：一次任务执行的完整链路</title>
+  <desc id="wfDesc">从钉钉 AI 表配置行出发，经去重与额度计算、Chrome 达人广场采集、联系方式弹窗查看，最后把结果、主档、日志、额度审计、游标五类数据回写钉钉 AI 表。</desc>
+
+  <rect width="1200" height="560" rx="24" fill="#0B0E14"/>
+
+  <!-- 顶部说明 -->
+  <text x="56" y="52" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',PingFang SC,sans-serif"
+        font-size="28" font-weight="700" fill="#F2F5F9">一次任务，五步完成</text>
+  <text x="56" y="82" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',PingFang SC,sans-serif"
+        font-size="17" fill="#8A93A6">douyin-talent-contact 001 --wait-ready 60 之后的全自动流程</text>
+
+  <!-- Step 1: 配置表 -->
+  <g transform="translate(56 120)">
+    <rect width="320" height="120" rx="14" fill="#11151F" stroke="#FE2C55" stroke-width="2"/>
+    <text x="20" y="30" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="14" fill="#FE2C55">STEP 1 · PREPARE</text>
+    <text x="20" y="58" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="19" font-weight="600" fill="#F2F5F9">读取钉钉 AI 表「配置表」</text>
+    <text x="20" y="84" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="15" fill="#C7CEDB">启用=是 的任务行：城市 / 品类 /</text>
+    <text x="20" y="106" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="15" fill="#C7CEDB">带货力 / 有微信电话 / 查询次数</text>
+  </g>
+
+  <path d="M 376 180 L 436 180" stroke="#FE2C55" stroke-width="2.5" marker-end="url(#arrowRed)"/>
+
+  <!-- Step 2: 去重与额度 -->
+  <g transform="translate(440 120)">
+    <rect width="320" height="120" rx="14" fill="#11151F" stroke="#FE2C55" stroke-width="2"/>
+    <text x="20" y="30" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="14" fill="#FE2C55">STEP 2 · DEDUPE + QUOTA</text>
+    <text x="20" y="58" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="19" font-weight="600" fill="#F2F5F9">历史去重 · 额度计算</text>
+    <text x="20" y="84" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="15" fill="#C7CEDB">结果表 + 主档 + 日标 → skip_keys；</text>
+    <text x="20" y="106" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="15" fill="#C7CEDB">已看过的不再消耗每日 30 次额度</text>
+  </g>
+
+  <path d="M 760 180 L 820 180" stroke="#FE2C55" stroke-width="2.5" marker-end="url(#arrowRed)"/>
+
+  <!-- Step 3: Chrome 采集 -->
+  <g transform="translate(824 120)">
+    <rect width="320" height="120" rx="14" fill="#11151F" stroke="#25F4EE" stroke-width="2"/>
+    <text x="20" y="30" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="14" fill="#25F4EE">STEP 3 · BROWSER</text>
+    <text x="20" y="58" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="19" font-weight="600" fill="#F2F5F9">Chrome 打开达人广场</text>
+    <text x="20" y="84" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="15" fill="#C7CEDB">CDP 复用登录态：应用筛选 → 逐行</text>
+    <text x="20" y="106" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="15" fill="#C7CEDB">采集 20+ 列指标 → 翻页</text>
+  </g>
+
+  <!-- Step 4: 联系方式（第二行） -->
+  <g transform="translate(824 288)">
+    <rect width="320" height="120" rx="14" fill="#11151F" stroke="#25F4EE" stroke-width="2"/>
+    <text x="20" y="30" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="14" fill="#25F4EE">STEP 4 · CONTACT POPUP</text>
+    <text x="20" y="58" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="19" font-weight="600" fill="#F2F5F9">查看联系方式弹窗</text>
+    <text x="20" y="84" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="15" fill="#C7CEDB">仅对新达人、且额度未超时打开：</text>
+    <text x="20" y="106" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="15" fill="#C7CEDB">提取微信号 / 虚拟手机号</text>
+  </g>
+
+  <path d="M 984 240 L 984 284" stroke="#25F4EE" stroke-width="2.5" marker-end="url(#arrowCyan)"/>
+
+  <path d="M 824 348 L 700 348 L 700 430" stroke="#25F4EE" stroke-width="2.5" fill="none" marker-end="url(#arrowCyan)"/>
+
+  <!-- Step 5: 回写 -->
+  <g transform="translate(56 436)">
+    <rect width="1088" height="92" rx="14" fill="#11151F" stroke="#FE2C55" stroke-width="2"/>
+    <text x="20" y="34" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="14" fill="#FE2C55">STEP 5 · COMMIT → 钉钉 AI 表 × 5 张表</text>
+    <g font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="16" fill="#F2F5F9">
+      <rect x="20" y="48" width="150" height="30" rx="15" fill="#181D2A"/>
+      <text x="95" y="68" text-anchor="middle">结果表</text>
+      <rect x="182" y="48" width="174" height="30" rx="15" fill="#181D2A"/>
+      <text x="269" y="68" text-anchor="middle">达人主档表 upsert</text>
+      <rect x="368" y="48" width="210" height="30" rx="15" fill="#181D2A"/>
+      <text x="473" y="68" text-anchor="middle">联系方式查看日志</text>
+      <rect x="590" y="48" width="210" height="30" rx="15" fill="#181D2A"/>
+      <text x="695" y="68" text-anchor="middle">每日 30 次额度审计</text>
+      <rect x="812" y="48" width="210" height="30" rx="15" fill="#181D2A"/>
+      <text x="917" y="68" text-anchor="middle">任务执行游标表</text>
+    </g>
+    <path d="M 662 348 L 662 432" stroke="#FE2C55" stroke-width="0" />
+  </g>
+
+  <path d="M 662 408 L 662 432" stroke="#FE2C55" stroke-width="2.5" marker-end="url(#arrowRed)"/>
+
+  <defs>
+    <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#FE2C55"/>
+    </marker>
+    <marker id="arrowCyan" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#25F4EE"/>
+    </marker>
+  </defs>
+</svg>
