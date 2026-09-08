@@ -11,8 +11,22 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
+from dws_client import FieldCodec, schema_to_dws_fields  # noqa: E402
 from runtime_config import DEFAULT_CONFIG, load_config, save_config  # noqa: E402
 from schema_spec import TABLE_KEYS, TABLE_SCHEMAS  # noqa: E402
+
+
+class FakeClient:
+    """Minimal DwsClient stand-in for codec tests (no network)."""
+
+    def list_fields(self, base_id: str, table_id: str) -> list[dict]:
+        assert base_id == "base_demo"
+        assert table_id == "tbl_demo"
+        return [
+            {"fieldId": "fld01", "fieldName": "任务ID"},
+            {"fieldId": "fld02", "fieldName": "启用"},
+            {"fieldId": "fld03", "fieldName": "查询次数"},
+        ]
 
 
 class SkillPackageTest(unittest.TestCase):
@@ -38,6 +52,29 @@ class SkillPackageTest(unittest.TestCase):
             self.assertEqual(loaded["backend"], "dingtalk")
             self.assertEqual(loaded["dingtalk"]["base_id"], "base_demo")
             self.assertEqual(loaded["quota"]["daily_quota"], 30)
+            self.assertEqual(loaded["dws_binary"], "dws")
+            self.assertNotIn("feishu", loaded)
+            self.assertNotIn("helper", loaded["dingtalk"])
+
+    def test_field_codec_round_trip(self) -> None:
+        codec = FieldCodec(FakeClient(), "base_demo", "tbl_demo")  # type: ignore[arg-type]
+        cells = codec.encode({"任务ID": "001", "启用": "是", "不存在字段": "x", "查询次数": ""})
+        self.assertEqual(cells, {"fld01": "001", "fld02": "是"})
+        decoded = codec.decode({"recordId": "rec1", "cells": cells})
+        self.assertEqual(decoded["id"], "rec1")
+        self.assertEqual(decoded["fields"]["任务ID"], "001")
+        encoded_record = codec.encode_record({"id": "rec1", "fields": {"任务ID": "001"}})
+        self.assertEqual(encoded_record, {"recordId": "rec1", "cells": {"fld01": "001"}})
+
+    def test_schema_to_dws_fields(self) -> None:
+        dws_fields = schema_to_dws_fields(TABLE_SCHEMAS["达人主档表"])
+        self.assertEqual(dws_fields[0], {"fieldName": "dedupe_key", "type": "text"})
+        names = [field["fieldName"] for field in dws_fields]
+        self.assertIn("微信号", names)
+        for field in dws_fields:
+            self.assertIn("fieldName", field)
+            self.assertIn("type", field)
+            self.assertIn(field["type"], {"text", "number"})
 
     def test_no_known_sensitive_strings(self) -> None:
         raw_markers = os.environ.get("SENSITIVE_MARKERS", "")
