@@ -1,6 +1,6 @@
 # Schema
 
-The skill creates six tables with stable Chinese names:
+The skill auto-creates six tables with stable Chinese names in your DingTalk AI Table base (first run does this automatically):
 
 - `配置表`: task filters and run status
 - `结果表`: collected talent basics and WeChat/contact fields
@@ -31,5 +31,5 @@ Quota logic:
 
 Sensitive data rule:
 
-- Do not store real DingTalk base IDs, Feishu base tokens, Douyin group IDs, account names, or company/person names in skill files.
+- Do not store real DingTalk base IDs, Douyin group IDs, account names, or company/person names in skill files.
 - Store those values only in the user-local config file.
