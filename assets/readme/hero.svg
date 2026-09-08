@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="1200" height="360" viewBox="0 0 1200 360"
+     role="img" aria-labelledby="heroTitle heroDesc">
+  <title id="heroTitle">douyin-life-talent-contact — 抖音来客达人广场自动采集与联系方式回填</title>
+  <desc id="heroDesc">按配置表筛选达人广场，采集达人数据并查看联系方式，去重后回写钉钉 AI 表六张数据表。</desc>
+
+  <defs>
+    <linearGradient id="bgGlow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#141926"/>
+      <stop offset="1" stop-color="#0B0E14"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="360" rx="24" fill="url(#bgGlow)"/>
+
+  <!-- 左侧标题区 -->
+  <g id="title-block" transform="translate(56 56)">
+    <text x="0" y="24" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',PingFang SC,sans-serif"
+          font-size="18" fill="#25F4EE" letter-spacing="3">DOUYIN LIFE · TALENT SQUARE AUTOMATION</text>
+    <text x="0" y="86" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',PingFang SC,sans-serif"
+          font-size="52" font-weight="700" fill="#F2F5F9">抖音来客达人广场</text>
+    <text x="0" y="146" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',PingFang SC,sans-serif"
+          font-size="52" font-weight="700" fill="#FE2C55">联系方式自动采集回填</text>
+    <text x="0" y="192" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',PingFang SC,sans-serif"
+          font-size="20" fill="#8A93A6">按配置表筛选达人 → 自动查看联系方式 → 去重后回写钉钉 AI 表</text>
+
+    <!-- metadata badges -->
+    <g id="badges" transform="translate(0 224)">
+      <rect x="0" y="0" width="150" height="34" rx="17" fill="none" stroke="#2A3245" stroke-width="1.5"/>
+      <text x="75" y="22" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace"
+            font-size="15" fill="#C7CEDB">Python 3 · Selenium</text>
+      <rect x="162" y="0" width="176" height="34" rx="17" fill="none" stroke="#2A3245" stroke-width="1.5"/>
+      <text x="250" y="22" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace"
+            font-size="15" fill="#C7CEDB">钉钉 AI 表 · dws CLI</text>
+      <rect x="350" y="0" width="120" height="34" rx="17" fill="none" stroke="#2A3245" stroke-width="1.5"/>
+      <text x="410" y="22" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace"
+            font-size="15" fill="#C7CEDB">首次自动建表</text>
+    </g>
+  </g>
+
+  <!-- 右侧项目材料：达人数据行卡片 -->
+  <g id="talent-row-card" transform="translate(740 56)">
+    <rect x="0" y="0" width="404" height="248" rx="16" fill="#11151F" stroke="#2A3245" stroke-width="1.5"/>
+    <text x="24" y="36" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="14" fill="#8A93A6">life.douyin.com · 达人广场</text>
+
+    <!-- 表头行 -->
+    <g transform="translate(24 56)">
+      <rect x="0" y="0" width="356" height="26" rx="6" fill="#181D2A"/>
+      <text x="10" y="18" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="13" fill="#8A93A6">达人</text>
+      <text x="150" y="18" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="13" fill="#8A93A6">城市</text>
+      <text x="212" y="18" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="13" fill="#8A93A6">带货力</text>
+      <text x="286" y="18" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="13" fill="#8A93A6">微信号</text>
+    </g>
+
+    <!-- 数据行 1 -->
+    <g transform="translate(24 90)">
+      <circle cx="12" cy="14" r="10" fill="#25F4EE" opacity="0.25"/>
+      <circle cx="12" cy="14" r="5" fill="#25F4EE"/>
+      <text x="32" y="19" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="15" fill="#F2F5F9">阿木聊武汉</text>
+      <text x="150" y="19" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="15" fill="#C7CEDB">武汉</text>
+      <text x="212" y="19" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="15" fill="#25F4EE">Lv7</text>
+      <text x="286" y="19" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="15" fill="#FE2C55">✓ 已获取</text>
+    </g>
+    <line x1="24" y1="122" x2="380" y2="122" stroke="#1C2230" stroke-width="1"/>
+
+    <!-- 数据行 2 -->
+    <g transform="translate(24 134)">
+      <circle cx="12" cy="14" r="10" fill="#25F4EE" opacity="0.25"/>
+      <circle cx="12" cy="14" r="5" fill="#25F4EE"/>
+      <text x="32" y="19" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="15" fill="#F2F5F9">盈盈吃饭啦</text>
+      <text x="150" y="19" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="15" fill="#C7CEDB">杭州</text>
+      <text x="212" y="19" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="15" fill="#25F4EE">Lv6</text>
+      <text x="286" y="19" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="15" fill="#FE2C55">✓ 已获取</text>
+    </g>
+    <line x1="24" y1="166" x2="380" y2="166" stroke="#1C2230" stroke-width="1"/>
+
+    <!-- 数据行 3（待查看） -->
+    <g transform="translate(24 178)">
+      <circle cx="12" cy="14" r="10" fill="#FE2C55" opacity="0.2"/>
+      <circle cx="12" cy="14" r="5" fill="#FE2C55"/>
+      <text x="32" y="19" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="15" fill="#F2F5F9">满级小象</text>
+      <text x="150" y="19" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="15" fill="#C7CEDB">杭州</text>
+      <text x="212" y="19" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="15" fill="#25F4EE">Lv5</text>
+      <text x="286" y="19" font-family="-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif" font-size="15" fill="#8A93A6">查看中…</text>
+    </g>
+
+    <!-- 每日额度徽章 -->
+    <g transform="translate(24 214)">
+      <rect x="0" y="0" width="356" height="24" rx="12" fill="#181D2A"/>
+      <text x="12" y="17" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" fill="#8A93A6">今日剩余查看次数</text>
+      <rect x="140" y="5" width="196" height="14" rx="7" fill="#0B0E14"/>
+      <rect x="140" y="5" width="144" height="14" rx="7" fill="#FE2C55"/>
+      <text x="356" y="17" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="13" fill="#F2F5F9">22 / 30</text>
+    </g>
+  </g>
+</svg>
